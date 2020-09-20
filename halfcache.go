@@ -6,9 +6,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/coocood/freecache"
 	"sync"
 	"time"
+
+	"github.com/coocood/freecache"
 )
 
 type Cache interface {
@@ -18,7 +19,7 @@ type Cache interface {
 type entity struct {
 	POD struct {
 		UpdateTimeStamp int64
-		FinalTimeStamp int64
+		FinalTimeStamp  int64
 	}
 
 	Data []byte
@@ -55,16 +56,16 @@ type halfCache struct {
 	cache *freecache.Cache
 
 	updateTTL time.Duration
-	finalTTL time.Duration
+	finalTTL  time.Duration
 
 	directMultiGet func(keys ...string) (map[string][]byte, error)
 }
 
-func NewHalfCache(size int, updateTTL, finalTTL time.Duration, directMultiGet func(keys ...string) (map[string][]byte, error) ) Cache {
+func NewHalfCache(size int, updateTTL, finalTTL time.Duration, directMultiGet func(keys ...string) (map[string][]byte, error)) Cache {
 	return &halfCache{
-		cache: freecache.NewCache(size),
-		updateTTL: updateTTL,
-		finalTTL: finalTTL,
+		cache:          freecache.NewCache(size),
+		updateTTL:      updateTTL,
+		finalTTL:       finalTTL,
 		directMultiGet: directMultiGet,
 	}
 }
@@ -89,6 +90,7 @@ func (hc *halfCache) extractData(entityBytes []byte) (value []byte, needUpdate b
 	if now > entity.POD.FinalTimeStamp {
 		valid = false
 	}
+
 	return entity.Data, needUpdate, valid
 }
 
@@ -123,14 +125,14 @@ func (hc *halfCache) updateCache(directRet map[string][]byte) {
 	now := time.Now()
 
 	for key, value := range directRet {
-		entity := entity {
+		entity := entity{
 			Data: value,
 			POD: struct {
 				UpdateTimeStamp int64
 				FinalTimeStamp  int64
 			}{
 				UpdateTimeStamp: now.Add(hc.updateTTL).Unix(),
-				FinalTimeStamp: now.Add(hc.finalTTL).Unix(),
+				FinalTimeStamp:  now.Add(hc.finalTTL).Unix(),
 			},
 		}
 
@@ -163,7 +165,7 @@ func (hc *halfCache) MultiGet(keys ...string) (map[string][]byte, error) {
 	}
 
 	var (
-		wg sync.WaitGroup
+		wg        sync.WaitGroup
 		directErr error
 		directRet map[string][]byte
 	)
